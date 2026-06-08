@@ -4,7 +4,7 @@
     <h1 class="display-5">Filmová databáze</h1>
 
     <p class="lead">
-        Minimální webová aplikace v CodeIgniteru 4 pro správu filmů.
+        webová aplikace pro správu filmů.
     </p>
 
     <hr>

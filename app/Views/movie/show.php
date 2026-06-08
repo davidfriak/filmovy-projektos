@@ -8,39 +8,15 @@
     </ol>
 </nav>
 
-<div class="card">
+<div class="card shadow-sm">
     <div class="card-header">
         <h1><?= esc($movie->title) ?></h1>
     </div>
 
     <div class="card-body">
-
-        <?php if (!empty($movie->poster)): ?>
-            <img
-                src="<?= base_url('uploads/posters/' . $movie->poster) ?>"
-                class="img-fluid mb-3"
-                style="max-height: 400px;"
-                alt="<?= esc($movie->title) ?>"
-            >
-        <?php endif; ?>
-
-        <p>
-            <strong>Datum vydání:</strong>
-            <?php
-                $date = $movie->published_at ?? $movie->release_date;
-                echo is_numeric($date) ? 'Neuvedeno' : date('d.m.Y', strtotime($date));
-            ?>
-        </p>
-
-        <p>
-            <strong>Délka:</strong>
-            <?= esc($movie->duration) ?> minut
-        </p>
-
-        <p>
-            <strong>Hodnocení:</strong>
-            <?= esc($movie->rating) ?> %
-        </p>
+        <p><strong>Datum vydání:</strong> <?= esc($movie->release_date ?? 'Neuvedeno') ?></p>
+        <p><strong>Délka:</strong> <?= esc($movie->duration) ?> minut</p>
+        <p><strong>Hodnocení:</strong> <?= esc($movie->rating) ?> %</p>
 
         <p>
             <strong>Žánry:</strong>
@@ -51,16 +27,6 @@
             <?php else: ?>
                 Neuvedeno
             <?php endif; ?>
-        </p>
-
-        <p>
-            <strong>Vytvořeno:</strong>
-            <?= !empty($movie->created_at) && !is_numeric($movie->created_at) ? date('d.m.Y H:i', strtotime($movie->created_at)) : 'Neuvedeno' ?>
-        </p>
-
-        <p>
-            <strong>Upraveno:</strong>
-            <?= !empty($movie->updated_at) && !is_numeric($movie->updated_at) ? date('d.m.Y H:i', strtotime($movie->updated_at)) : 'Neuvedeno' ?>
         </p>
 
         <hr>
@@ -85,10 +51,7 @@
         <hr>
 
         <h3>Popis</h3>
-
-        <div>
-            <?= $movie->description ?>
-        </div>
+        <p><?= esc($movie->description) ?></p>
     </div>
 </div>
 

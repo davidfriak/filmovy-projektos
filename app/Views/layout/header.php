@@ -16,6 +16,39 @@
 </head>
 
 <body class="bg-light">
+<style>
+.pagination {
+    margin-top: 25px;
+}
+
+.pagination a,
+.pagination strong {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 0 4px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.pagination a {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.pagination a:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+.pagination strong {
+    background: #0d6efd;
+    color: white;
+    border: 1px solid #0d6efd;
+}
+</style>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
 

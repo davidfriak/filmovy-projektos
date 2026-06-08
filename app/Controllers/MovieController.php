@@ -3,20 +3,14 @@
 namespace App\Controllers;
 
 use App\Models\MovieData;
-use App\Models\Genre;
-use App\Models\MovieHasGenreData;
 
 class MovieController extends BaseController
 {
     protected MovieData $movieModel;
-    protected Genre $genreModel;
-    protected MovieHasGenreData $movieHasGenreModel;
 
     public function __construct()
     {
         $this->movieModel = new MovieData();
-        $this->genreModel = new Genre();
-        $this->movieHasGenreModel = new MovieHasGenreData();
     }
 
     private function requireLogin()
@@ -32,7 +26,7 @@ class MovieController extends BaseController
     {
         return view('movie/index', [
             'movies' => $this->movieModel
-                ->orderBy('pid_movie', 'DESC')
+                ->orderBy('pid_movie', 'ASC')
                 ->paginate(12),
             'pager' => $this->movieModel->pager
         ]);
@@ -54,22 +48,14 @@ class MovieController extends BaseController
 
         $genres = $db->table('movie_has_genre_data')
             ->select('movie_genre.name')
-            ->join(
-                'movie_genre',
-                'movie_genre.pid_genre = movie_has_genre_data.genre_pid_movie',
-                'left'
-            )
+            ->join('movie_genre', 'movie_genre.pid_genre = movie_has_genre_data.genre_pid_movie', 'left')
             ->where('movie_has_genre_data.movie_pid_movie', $id)
             ->get()
             ->getResult();
 
         $actors = $db->table('movie_movie_has_actor_1')
             ->select('movie_actor_data.name, movie_actor_data.surname, movie_movie_has_actor_1.role_name')
-            ->join(
-                'movie_actor_data',
-                'movie_actor_data.pid_actor = movie_movie_has_actor_1.actor_id_actor',
-                'left'
-            )
+            ->join('movie_actor_data', 'movie_actor_data.pid_actor = movie_movie_has_actor_1.actor_id_actor', 'left')
             ->where('movie_movie_has_actor_1.movie_id_movie', $id)
             ->get()
             ->getResult();
@@ -83,46 +69,7 @@ class MovieController extends BaseController
 
     public function showWithGenre($movieId, $genreId)
     {
-        $db = \Config\Database::connect();
-
-        $movie = $db->table('movie_movie_data')
-            ->where('pid_movie', $movieId)
-            ->where('deleted_at', null)
-            ->get()
-            ->getRow();
-
-        if (!$movie) {
-            return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
-        }
-
-        $genres = $db->table('movie_has_genre_data')
-            ->select('movie_genre.name')
-            ->join(
-                'movie_genre',
-                'movie_genre.pid_genre = movie_has_genre_data.genre_pid_movie',
-                'left'
-            )
-            ->where('movie_has_genre_data.movie_pid_movie', $movieId)
-            ->where('movie_has_genre_data.genre_pid_movie', $genreId)
-            ->get()
-            ->getResult();
-
-        $actors = $db->table('movie_movie_has_actor_1')
-            ->select('movie_actor_data.name, movie_actor_data.surname, movie_movie_has_actor_1.role_name')
-            ->join(
-                'movie_actor_data',
-                'movie_actor_data.pid_actor = movie_movie_has_actor_1.actor_id_actor',
-                'left'
-            )
-            ->where('movie_movie_has_actor_1.movie_id_movie', $movieId)
-            ->get()
-            ->getResult();
-
-        return view('movie/show', [
-            'movie' => $movie,
-            'genres' => $genres,
-            'actors' => $actors
-        ]);
+        return $this->show($movieId);
     }
 
     public function addForm()
@@ -131,8 +78,10 @@ class MovieController extends BaseController
             return $redirect;
         }
 
+        $db = \Config\Database::connect();
+
         return view('movie/addForm', [
-            'genres' => $this->genreModel->findAll()
+            'genres' => $db->table('movie_genre')->get()->getResult()
         ]);
     }
 
@@ -142,30 +91,23 @@ class MovieController extends BaseController
             return $redirect;
         }
 
-        $posterName = null;
-        $poster = $this->request->getFile('poster');
-
-        if ($poster && $poster->isValid() && !$poster->hasMoved()) {
-            $posterName = $poster->getRandomName();
-            $poster->move(FCPATH . 'uploads/posters', $posterName);
-        }
-
         $movieId = $this->movieModel->insert([
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
             'release_date' => $this->request->getPost('release_date'),
-            'published_at' => $this->request->getPost('published_at'),
             'duration' => $this->request->getPost('duration'),
             'rating' => $this->request->getPost('rating'),
-            'poster' => $posterName,
             'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
             'deleted_at' => null
         ]);
 
         $genreId = $this->request->getPost('genre_id');
 
         if ($genreId) {
-            $this->movieHasGenreModel->insert([
+            $db = \Config\Database::connect();
+
+            $db->table('movie_has_genre_data')->insert([
                 'movie_pid_movie' => $movieId,
                 'genre_pid_movie' => $genreId
             ]);
@@ -186,9 +128,11 @@ class MovieController extends BaseController
             return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
         }
 
+        $db = \Config\Database::connect();
+
         return view('movie/editForm', [
             'movie' => $movie,
-            'genres' => $this->genreModel->findAll()
+            'genres' => $db->table('movie_genre')->get()->getResult()
         ]);
     }
 
@@ -198,45 +142,31 @@ class MovieController extends BaseController
             return $redirect;
         }
 
-        $movie = $this->movieModel->find($id);
-
-        if (!$movie) {
-            return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
-        }
-
-        $data = [
+        $this->movieModel->update($id, [
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
             'release_date' => $this->request->getPost('release_date'),
-            'published_at' => $this->request->getPost('published_at'),
             'duration' => $this->request->getPost('duration'),
             'rating' => $this->request->getPost('rating'),
             'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        $poster = $this->request->getFile('poster');
-
-        if ($poster && $poster->isValid() && !$poster->hasMoved()) {
-            $posterName = $poster->getRandomName();
-            $poster->move(FCPATH . 'uploads/posters', $posterName);
-            $data['poster'] = $posterName;
-        }
-
-        $this->movieModel->update($id, $data);
+        ]);
 
         $genreId = $this->request->getPost('genre_id');
 
         if ($genreId) {
-            $oldRelation = $this->movieHasGenreModel
+            $db = \Config\Database::connect();
+
+            $oldRelation = $db->table('movie_has_genre_data')
                 ->where('movie_pid_movie', $id)
-                ->first();
+                ->get()
+                ->getRow();
 
             if ($oldRelation) {
-                $this->movieHasGenreModel->update($oldRelation->pid_movie_has_genre, [
-                    'genre_pid_movie' => $genreId
-                ]);
+                $db->table('movie_has_genre_data')
+                    ->where('pid_movie_has_genre', $oldRelation->pid_movie_has_genre)
+                    ->update(['genre_pid_movie' => $genreId]);
             } else {
-                $this->movieHasGenreModel->insert([
+                $db->table('movie_has_genre_data')->insert([
                     'movie_pid_movie' => $id,
                     'genre_pid_movie' => $genreId
                 ]);
@@ -250,12 +180,6 @@ class MovieController extends BaseController
     {
         if ($redirect = $this->requireLogin()) {
             return $redirect;
-        }
-
-        $movie = $this->movieModel->find($id);
-
-        if (!$movie) {
-            return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
         }
 
         $this->movieModel->update($id, [
