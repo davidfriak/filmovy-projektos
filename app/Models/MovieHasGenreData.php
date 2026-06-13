@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class MovieHasGenreData extends Model
 {
-    protected $table = 'movie_has_genre_data';
+    protected $table = 'movie_movie_has_genre_data';
     protected $primaryKey = 'pid_movie_has_genre';
     protected $returnType = 'object';
     protected $useAutoIncrement = true;

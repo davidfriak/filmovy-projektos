@@ -28,7 +28,7 @@
                     </h5>
 
                     <p class="card-text">
-                        <?= substr(strip_tags($movie->description), 0, 120) ?>...
+                        <?= esc($movieService->shortText($movie->description)) ?>
                     </p>
 
                     <p>

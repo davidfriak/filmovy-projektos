@@ -42,18 +42,12 @@
         <label class="form-label">Datum vydání</label>
         <input
             type="date"
-            name="published_at"
+            name="release_date"
             class="form-control"
-            value="<?= esc($movie->published_at ?? date('Y-m-d')) ?>"
+            value="<?= !empty($movie->release_date) ? date('Y-m-d', (int)$movie->release_date) : date('Y-m-d') ?>"
             required
         >
     </div>
-
-    <input
-        type="hidden"
-        name="release_date"
-        value="<?= esc($movie->release_date ?? date('Y-m-d')) ?>"
-    >
 
     <div class="mb-3">
         <label class="form-label">Délka v minutách</label>
@@ -86,7 +80,7 @@
             <option value="" disabled>Vyber žánr</option>
 
             <?php foreach($genres as $genre): ?>
-                <option value="<?= $genre->pid_genre ?>">
+                <option value="<?= $genre->pid_genre ?>" <?= ((string)($selectedGenreId ?? '') === (string)$genre->pid_genre) ? 'selected' : '' ?>>
                     <?= esc($genre->name) ?>
                 </option>
             <?php endforeach; ?>

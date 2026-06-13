@@ -2,8 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Models\UserModel;
-
 class AuthController extends BaseController
 {
     public function loginForm()
@@ -13,30 +11,24 @@ class AuthController extends BaseController
 
     public function login()
     {
-        $userModel = new UserModel();
+        $username = trim((string) $this->request->getPost('username'));
+        $password = (string) $this->request->getPost('password');
 
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
-
-        $user = $userModel->where('username', $username)->first();
-
-        if (!$user || !password_verify($password, $user->password)) {
-            return redirect()->to('/login')->with('error', 'Špatné jméno nebo heslo.');
+        if ($username !== 'admin' || $password !== 'admin123') {
+            return redirect()->to(site_url('login'))->with('error', 'Špatné jméno nebo heslo.');
         }
 
         session()->set([
             'isLoggedIn' => true,
-            'userId' => $user->pid_user,
-            'username' => $user->username
+            'username' => 'admin',
         ]);
 
-        return redirect()->to('/movies')->with('success', 'Byl jsi přihlášen.');
+        return redirect()->to(site_url('movies'))->with('success', 'Byl jsi přihlášen.');
     }
 
     public function logout()
     {
         session()->destroy();
-
-        return redirect()->to('/')->with('success', 'Byl jsi odhlášen.');
+        return redirect()->to(site_url('/'))->with('success', 'Byl jsi odhlášen.');
     }
 }

@@ -32,3 +32,8 @@ $routes->post('movies/edit/(:num)', 'MovieController::edit/$1');
 $routes->post('movies/remove/(:num)', 'MovieController::remove/$1');
 
 $routes->get('movies/show/(:num)/genre/(:num)', 'MovieController::showWithGenre/$1/$2');
+
+$routes->get('popular', 'PopularMovieController::index');
+$routes->get('popular/addForm', 'PopularMovieController::addForm');
+$routes->post('popular/add', 'PopularMovieController::add');
+$routes->post('popular/remove/(:num)', 'PopularMovieController::remove/$1');

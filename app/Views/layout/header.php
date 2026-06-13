@@ -72,6 +72,10 @@
                 Statistiky
             </a>
 
+            <a class="nav-link" href="<?= base_url('/popular') ?>">
+                Populární filmy
+            </a>
+
         </div>
 
         <div>

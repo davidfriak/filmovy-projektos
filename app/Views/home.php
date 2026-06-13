@@ -17,6 +17,10 @@
         Statistiky
     </a>
 
+    <a href="<?= site_url('popular') ?>" class="btn btn-outline-success">
+        Populární filmy
+    </a>
+
     <?php if (session()->get('isLoggedIn')): ?>
         <a href="<?= site_url('movies/addForm') ?>" class="btn btn-success">
             Přidat film

@@ -49,7 +49,31 @@
 
 </div>
 
-<a href="<?= base_url('/movies') ?>" class="btn btn-secondary">
+
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h3>Top žánry podle počtu filmů</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Žánr</th>
+                    <th>Počet filmů</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($genreStats as $genre): ?>
+                    <tr>
+                        <td><?= esc($genre->name ?? 'Neznámý') ?></td>
+                        <td><?= esc($genre->movie_count) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="<?= base_url('/movies') ?>" class="btn btn-secondary mt-3">
     Zpět na filmy
 </a>
 

@@ -1,0 +1,33 @@
+Filmová databáze – splnění zadání
+
+Databáze:
+- Tabulky: movie_movie_data, movie_actor_data, movie_genre, movie_movie_has_actor_1, movie_movie_has_genre_data, movie_popular_movie.
+- Relační tabulky m:n: movie_movie_has_actor_1, movie_movie_has_genre_data.
+- Datum: release_date, created_at, updated_at, deleted_at.
+- Dlouhý text: description, biography.
+- Obrázky: movie_popular_movie.poster.
+
+Názvosloví:
+- Tabulky a sloupce jsou anglicky.
+- Víceslovné názvy používají snake_case.
+- Primární klíče používají prefix pid_ nebo id_ podle existující struktury.
+- Controllery používají PascalCase, např. MovieController.
+- Modely používají PascalCase, např. MovieData.
+- Views jsou ve složkách podle části aplikace, např. movie/index.php.
+- Metody controllerů jsou jednotné: index, show, addForm, add, editForm, edit, remove.
+
+Funkce projektu:
+- Výpis filmů do karet se stránkováním z Config/Pager.php.
+- Detail filmu používá joiny na žánry a herce.
+- Statistiky používají agregační funkce COUNT a AVG.
+- CRUD pro filmy: přidání, editace, mazání přes modal.
+- Mazání filmů používá soft delete přes deleted_at.
+- Alerty po přidání, editaci a smazání.
+- Dropdown žánrů se načítá z databáze, první hodnota je nevybratelná a pole je required.
+- WYSIWYG editor TinyMCE je použitý pro description.
+- Populární filmy zobrazují obrázky do karet, mají přidání s uploadem a mazání přes modal.
+- Breadcrumbs jsou ve frontendových stránkách.
+- Přidávání, editace a mazání jsou dostupné jen po přihlášení.
+- Přihlášení: admin / admin123.
+- Jedna routa má dva parametry: movies/show/(:num)/genre/(:num).
+- Opakované operace jsou přes knihovnu App\Libraries\MovieService a její metody mají komentáře.

@@ -2,15 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Libraries\MovieService;
 use App\Models\MovieData;
 
 class MovieController extends BaseController
 {
     protected MovieData $movieModel;
+    protected MovieService $movieService;
 
     public function __construct()
     {
         $this->movieModel = new MovieData();
+        $this->movieService = new MovieService();
     }
 
     private function requireLogin()
@@ -26,9 +29,11 @@ class MovieController extends BaseController
     {
         return view('movie/index', [
             'movies' => $this->movieModel
+                ->where('deleted_at', null)
                 ->orderBy('pid_movie', 'ASC')
-                ->paginate(12),
-            'pager' => $this->movieModel->pager
+                ->paginate(config('Pager')->perPage),
+            'pager' => $this->movieModel->pager,
+            'movieService' => $this->movieService,
         ]);
     }
 
@@ -46,10 +51,10 @@ class MovieController extends BaseController
             return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
         }
 
-        $genres = $db->table('movie_has_genre_data')
-            ->select('movie_genre.name')
-            ->join('movie_genre', 'movie_genre.pid_genre = movie_has_genre_data.genre_pid_movie', 'left')
-            ->where('movie_has_genre_data.movie_pid_movie', $id)
+        $genres = $db->table('movie_movie_has_genre_data')
+            ->select('movie_genre.pid_genre, movie_genre.name')
+            ->join('movie_genre', 'movie_genre.pid_genre = movie_movie_has_genre_data.genre_pid_movie', 'left')
+            ->where('movie_movie_has_genre_data.movie_pid_movie', $id)
             ->get()
             ->getResult();
 
@@ -63,12 +68,23 @@ class MovieController extends BaseController
         return view('movie/show', [
             'movie' => $movie,
             'genres' => $genres,
-            'actors' => $actors
+            'actors' => $actors,
         ]);
     }
 
     public function showWithGenre($movieId, $genreId)
     {
+        $db = \Config\Database::connect();
+
+        $exists = $db->table('movie_movie_has_genre_data')
+            ->where('movie_pid_movie', $movieId)
+            ->where('genre_pid_movie', $genreId)
+            ->countAllResults();
+
+        if (!$exists) {
+            return redirect()->to(site_url('movies/show/' . $movieId))->with('error', 'Tento film nemá vybraný žánr.');
+        }
+
         return $this->show($movieId);
     }
 
@@ -81,7 +97,7 @@ class MovieController extends BaseController
         $db = \Config\Database::connect();
 
         return view('movie/addForm', [
-            'genres' => $db->table('movie_genre')->get()->getResult()
+            'genres' => $db->table('movie_genre')->orderBy('name', 'ASC')->get()->getResult(),
         ]);
     }
 
@@ -94,22 +110,24 @@ class MovieController extends BaseController
         $movieId = $this->movieModel->insert([
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
-            'release_date' => $this->request->getPost('release_date'),
+            'release_date' => $this->movieService->dateToTimestamp($this->request->getPost('release_date')),
             'duration' => $this->request->getPost('duration'),
             'rating' => $this->request->getPost('rating'),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
-            'deleted_at' => null
+            'deleted_at' => null,
         ]);
 
-        $genreId = $this->request->getPost('genre_id');
+        if (!$movieId) {
+            return redirect()->back()->withInput()->with('error', 'Film se nepodařilo přidat.');
+        }
 
+        $genreId = $this->request->getPost('genre_id');
         if ($genreId) {
             $db = \Config\Database::connect();
-
-            $db->table('movie_has_genre_data')->insert([
+            $db->table('movie_movie_has_genre_data')->insert([
                 'movie_pid_movie' => $movieId,
-                'genre_pid_movie' => $genreId
+                'genre_pid_movie' => $genreId,
             ]);
         }
 
@@ -122,17 +140,21 @@ class MovieController extends BaseController
             return $redirect;
         }
 
-        $movie = $this->movieModel->find($id);
-
+        $movie = $this->movieModel->where('deleted_at', null)->find($id);
         if (!$movie) {
             return redirect()->to(site_url('movies'))->with('error', 'Film nebyl nalezen.');
         }
 
         $db = \Config\Database::connect();
+        $relation = $db->table('movie_movie_has_genre_data')
+            ->where('movie_pid_movie', $id)
+            ->get()
+            ->getRow();
 
         return view('movie/editForm', [
             'movie' => $movie,
-            'genres' => $db->table('movie_genre')->get()->getResult()
+            'selectedGenreId' => $relation->genre_pid_movie ?? null,
+            'genres' => $db->table('movie_genre')->orderBy('name', 'ASC')->get()->getResult(),
         ]);
     }
 
@@ -142,33 +164,35 @@ class MovieController extends BaseController
             return $redirect;
         }
 
-        $this->movieModel->update($id, [
+        $ok = $this->movieModel->update($id, [
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
-            'release_date' => $this->request->getPost('release_date'),
+            'release_date' => $this->movieService->dateToTimestamp($this->request->getPost('release_date')),
             'duration' => $this->request->getPost('duration'),
             'rating' => $this->request->getPost('rating'),
-            'updated_at' => date('Y-m-d H:i:s')
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        $genreId = $this->request->getPost('genre_id');
+        if (!$ok) {
+            return redirect()->back()->withInput()->with('error', 'Film se nepodařilo upravit.');
+        }
 
+        $genreId = $this->request->getPost('genre_id');
         if ($genreId) {
             $db = \Config\Database::connect();
-
-            $oldRelation = $db->table('movie_has_genre_data')
+            $oldRelation = $db->table('movie_movie_has_genre_data')
                 ->where('movie_pid_movie', $id)
                 ->get()
                 ->getRow();
 
             if ($oldRelation) {
-                $db->table('movie_has_genre_data')
+                $db->table('movie_movie_has_genre_data')
                     ->where('pid_movie_has_genre', $oldRelation->pid_movie_has_genre)
                     ->update(['genre_pid_movie' => $genreId]);
             } else {
-                $db->table('movie_has_genre_data')->insert([
+                $db->table('movie_movie_has_genre_data')->insert([
                     'movie_pid_movie' => $id,
-                    'genre_pid_movie' => $genreId
+                    'genre_pid_movie' => $genreId,
                 ]);
             }
         }
@@ -182,11 +206,8 @@ class MovieController extends BaseController
             return $redirect;
         }
 
-        $this->movieModel->update($id, [
-            'deleted_at' => date('Y-m-d H:i:s')
-        ]);
-
-        return redirect()->to(site_url('movies'))->with('success', 'Film byl smazán.');
+        $ok = $this->movieModel->update($id, ['deleted_at' => date('Y-m-d H:i:s')]);
+        return redirect()->to(site_url('movies'))->with($ok ? 'success' : 'error', $ok ? 'Film byl smazán.' : 'Film se nepodařilo smazat.');
     }
 
     public function statistics()
@@ -203,9 +224,19 @@ class MovieController extends BaseController
             ->get()
             ->getRow();
 
+        $genreStats = $db->table('movie_movie_has_genre_data')
+            ->select('movie_genre.name, COUNT(*) AS movie_count')
+            ->join('movie_genre', 'movie_genre.pid_genre = movie_movie_has_genre_data.genre_pid_movie', 'left')
+            ->groupBy('movie_genre.pid_genre, movie_genre.name')
+            ->orderBy('movie_count', 'DESC')
+            ->limit(10)
+            ->get()
+            ->getResult();
+
         return view('movie/statistics', [
             'totalMovies' => $totalMovies,
-            'averageRating' => $averageRating
+            'averageRating' => $averageRating,
+            'genreStats' => $genreStats,
         ]);
     }
 }

@@ -30,10 +30,8 @@
 
     <div class="mb-3">
         <label class="form-label">Datum vydání</label>
-        <input type="date" name="published_at" class="form-control" required>
+        <input type="date" name="release_date" class="form-control" required>
     </div>
-
-    <input type="hidden" name="release_date" value="<?= date('Y-m-d') ?>">
 
     <div class="mb-3">
         <label class="form-label">Délka v minutách</label>
