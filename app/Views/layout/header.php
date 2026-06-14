@@ -1,3 +1,4 @@
+<?php // Společná hlavička stránky, navigace, styly stránkování a flash hlášky. ?>
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -54,25 +55,25 @@
 
     <div class="container">
 
-        <a class="navbar-brand" href="<?= base_url('/') ?>">
+        <a class="navbar-brand" href="<?= site_url('/') ?>">
             FilmDB
         </a>
 
         <div class="navbar-nav">
 
-            <a class="nav-link" href="<?= base_url('/') ?>">
+            <a class="nav-link" href="<?= site_url('/') ?>">
                 Domů
             </a>
 
-            <a class="nav-link" href="<?= base_url('/movies') ?>">
+            <a class="nav-link" href="<?= site_url('/movies') ?>">
                 Filmy
             </a>
 
-            <a class="nav-link" href="<?= base_url('/movies/statistics') ?>">
+            <a class="nav-link" href="<?= site_url('/movies/statistics') ?>">
                 Statistiky
             </a>
 
-            <a class="nav-link" href="<?= base_url('/popular') ?>">
+            <a class="nav-link" href="<?= site_url('/popular') ?>">
                 Populární filmy
             </a>
 
@@ -80,6 +81,7 @@
 
         <div>
 
+            <?php // Podle session se zobrazí buď jméno uživatele a odhlášení, nebo tlačítko login. ?>
             <?php if(session()->get('isLoggedIn')): ?>
 
                 <span class="text-white me-2">
@@ -87,7 +89,7 @@
                 </span>
 
                 <a
-                    href="<?= base_url('/logout') ?>"
+                    href="<?= site_url('/logout') ?>"
                     class="btn btn-outline-light btn-sm"
                 >
                     Odhlásit
@@ -96,7 +98,7 @@
             <?php else: ?>
 
                 <a
-                    href="<?= base_url('/login') ?>"
+                    href="<?= site_url('/login') ?>"
                     class="btn btn-outline-light btn-sm"
                 >
                     Přihlášení
@@ -112,6 +114,7 @@
 
 <div class="container">
 
+<?php // Flashdata zobrazí jednorázové hlášky po přidání, editaci nebo smazání. ?>
 <?php if(session()->getFlashdata('success')): ?>
 
     <div class="alert alert-success">

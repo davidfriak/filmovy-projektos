@@ -20,7 +20,7 @@
 
     <div class="mb-3">
         <label class="form-label">Popis filmu</label>
-        <textarea name="description" class="form-control tinymce" required></textarea>
+        <textarea name="description" class="form-control tinymce"></textarea>
     </div>
 
     <div class="mb-3">

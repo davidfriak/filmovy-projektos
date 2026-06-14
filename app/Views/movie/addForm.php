@@ -12,7 +12,7 @@
 
 <form
     method="post"
-    action="<?= base_url('/movies/add') ?>"
+    action="<?= site_url('/movies/add') ?>"
     enctype="multipart/form-data"
 >
 
@@ -25,7 +25,7 @@
 
     <div class="mb-3">
         <label class="form-label">Popis filmu</label>
-        <textarea name="description" class="form-control tinymce" required></textarea>
+        <textarea name="description" class="form-control tinymce"></textarea>
     </div>
 
     <div class="mb-3">
